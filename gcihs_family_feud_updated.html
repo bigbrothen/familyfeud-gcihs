@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GCIHS Family Feud Game</title>
+<style>
+  body { font-family: 'Arial', sans-serif; background: #111; color: #fff; margin: 0; padding: 0; }
+  .container { max-width: 1200px; margin: auto; padding: 20px; }
+  .tile { display: inline-block; margin: 10px; padding: 20px; background: #222; color: #fff; cursor: pointer; border-radius: 5px; min-width: 150px; text-align: center; }
+  .tile.revealed { background: #ffcc00; color: #0b0f1a; }
+  .controls button { margin: 5px; padding: 10px 20px; }
+  .teams { margin-top: 20px; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>GCIHS Family Feud</h1>
+<div id="questionArea"></div>
+<div id="tilesArea"></div>
+<div class="controls">
+  <button id="prevRound">Previous Round</button>
+  <button id="nextRound">Next Round</button>
+  <button id="revealAll">Reveal All</button>
+  <button id="shuffleOrder">Shuffle Rounds</button>
+  <button id="autoRotate">Auto Rotate: OFF</button>
+</div>
+<div class="teams">
+<h2>Teams</h2>
+<button id="addTeam">Add Team</button>
+<input type="text" id="teamNameInput" placeholder="Team Name" />
+<button id="scorePlus">+10</button>
+<button id="scoreMinus">-10</button>
+<button id="resetScores">Reset Scores</button>
+<button id="clearStrikes">Clear Strikes</button>
+</div>
+<select id="roundSelect"></select>
+</div>
+<script>
+function $(id){ return document.getElementById(id); }
+let ROUNDS=[
+{q:'Most famous student in the school', a:['Starboy','Don Lomo','Ella Ofori','Jesse Owusu','Nakaesha','Emma Ashley']},
+{q:'Craziest things that have happened this term', a:['Lashing of the Year 10 Boys','46 WASSCE students being suspended','200+ students going home because of the flu','Pastor Botchway´s cane moment','Numerous Sexual misconducts','Lady of the week scandal','GCIHS Memes Instagram']},
+{q:'Name a Pastor Botchway thing that makes students panic', a:['Go back','STOP!!!!!!','I will cane you','Sing','Foolish boy']},
+{q:'Name something a student definitely does not want to find in their school lunch', a:['House flies','A tooth','A strand of hair','Maggots','Stones','Uncooked food']},
+{q:'Name something a student might want to hide in their locker', a:['Chromebook','Provisions','Perfume','Phones','Mifi','Lip products','Money','Calculator']},
+{q:'Name something you hear in the dorm after lights out in the boys dorm', a:['Starboy shouting its lights out','Tumi and Kobby','Glass breaking','Countdown','Housemasters Keys','CEO dey dorm']},
+{q:'Name something a student might pretend isn’t theirs if it falls on the classroom floor', a:['Shankroll','Sanitary Pad','Provisions','Cutlery','A metal bottle','Rubbish','A plate']},
+{q:'Name something a student might try to hide from their parents if they came to visit school', a:['Their Progressives Scores','Their Teachers','Mr Eshun','Their classmates','Their discoloured teeth','House Staff']},
+{q:'Name a teacher students are lowkey afraid of', a:['Ms Christiana','Mr Ato','Mr Eshun','Pastor Botchway','Mr Setsofia','Mrs Cornelia','Mr Kumador','Miss Ivy','Sir Bob']},
+{q:'Best teacher’s nicknames', a:['Abodie','Setsos','Lolo','Don Sammy','Bykomas','JB','Osagyefo','D² 144','Poison Ivy','Bobbbb']},
+{q:'Name a popular snack students take in school', a:['Sausage roll','Plantain chips','Cocoa','Tangerine','Grapes','Bread']},
+{q:'Name something that distracts students during lessons', a:['Chromebook','Sleep','Significant other','The teachers hair','The pantry smell','Bread','Random Inspections','Mr Eshun']},
+{q:'Name something teachers say all the time', a:['You people have it easy oo','My work is 30% yours is 70%','When I was your age']},
+{q:'Name something students whisper about in class', a:['The teachers dressing','Pending DC cases','Unidentified smell']},
+{q:'Name a situation where students wish they could rewind time', a:['After being caught on camera for doing something wrong','Dropping their food/snack','Tripping and falling in front of a crowd']},
+{q:'Name something that causes chaos in the school', a:['Disagreements','Inspections','Power cuts','No water in school']},
+{q:'Name something you might find in a student’s tote bag', a:['Lipgloss and oil','Perfume','Pad','Shankroll','Undergarments','Money','Chromebook']},
+{q:'Name a reason someone would get called to the principal’s office', a:['Disrespecting a teacher','Hair','Sexual Misconduct']},
+{q:'Name something people say to act like they’re not offended, but they are', a:['You it is fine dont worry about it','Echill','I have not vex ooo']},
+{q:'Name something that instantly embarrasses a student', a:['When they are losing an argument','Disciplinary committee','Getting sacked from special diet line','Dropping plates or cutlery','Getting called to go for notebooks from stage or clothes','Dirtiest locker or bed','When pastor Botchway tells you to go back']},
+{q:'Best ways which students sack teachers from the classroom', a:['Sir please it’s time','When does the period end?','Sleeping','Alarm','Leaving the Classroom','Who said the period is over']},
+{q:'Name the most stolen thing in the dorms', a:['Sponge','Undergarments','Water','Socks','Iron','Washing powder','Bucket']},
+{q:'Name something people do during visiting', a:['People cooking Budak','Jumping from parents to parent','Meeting their significant others parents','Flexing family members','Flexing their phones']},
+{q:'Name something that disappears in school faster than anything else', a:['Water','Provisions','Peoples innocence','Money','Sausage roll','Yoghurt','Earpiece','Cocoa','Bathing Water']},
+{q:'Name something that can ruin someone’s morning fast', a:['Mr.Eshun coming on stage','Skirt inspection','Hausa koko','Light off','Mr Blemano´s morning announcement','No water flowing','Getting locked inside the dorm','Bad bread']},
+{q:'What is the craziest Christian High myth', a:['The Three breasted woman','When you mention someone\'s name they appear']},
+{q:'Name something a teacher does that instantly annoys students', a:['Jon Jokes or trying to crack a joke','I’ll report to Mr. Eshun','Surprise test/progressive','Telling us we are not learning even though we are','Blaming us for something that is not our faults- morning periods','Coming to class very early','Mentioning our marks out loud','Testing us on something we have not learnt']},
+{q:'Name something students brag about that no one asked for', a:['How much their chromebook is','Their sneakers','Their house','They were first in class','Amount of food they have eaten','Trips they have taken','Going out of the school for events(sports)','Parents cars']},
+{q:'Name something people panic about when someone shouts “inspection!”', a:['The state of their lockers','The state of their Beds','The illegals in their locker','How long their skirt is','Have I written all my devotion notes','What is the Apostles creed','What was today\'s quiet time']},
+{q:'Name something that spreads fast in school besides gossip', a:['Mock results','DC cases','Dorm Issues','When Pastor Botchway is in school','The Flu','When there's yogurt at tuck shop','When there are inspections','When there is a fight going on','The pantry serving new food']},
+{q:'Name something C-high students pretend to like but actually hate', a:['Sunday Church Service & Devotion','Some teachers','Classmates','Hausa koko','Some Prefects','Vespers','Prefects','Quiet time']},
+{q:'Name something students do or say when trying to avoid chores', a:['I have a medical Report','I have been sent','I need to visit the washroom','My mother said i should not work','I don\'t know how to do it','Let me drop this and come back']},
+{q:'Name something people do to impress others', a:['Toasting the opposite gender in public','Not taking cocoa','Using perfumes','Wear snatched Teedees','Oiling their body','Walk slowly','Buying 60 cedis grapes']},
+{q:'If all the year groups fought, which one would win easily', a:['Year 12 & 13 Cambridge','Year 12 WASSCE','Year 11 Cambridge','Year 11 WASSCE','Year 10 Cambridge','Year 10 WASSCE']},
+{q:'If you wake up during surgery, what would you hate to see your surgeon holding', a:['Knife','Gun','Their phone','Sharwarma','A part of my body']},
+{q:'What gives you the ick', a:['Giving side-eye like they’re the CEO of Judging People.','Girls That speak pidgin','Thirst traps','A guy that feels themselves too much','Boys that wear overly baggy pants','Girls with attitudes','Someone who smells']} 
+];
+
+let currentIndex=0;
+let autoRotate=false;
+let autoTimer;
+
+function renderRoundSelect(){
+  $('roundSelect').innerHTML='';
+  ROUNDS.forEach((r,i)=>{
+    let o=document.createElement('option'); o.value=i; o.text=`Round ${i+1}`; $('roundSelect').appendChild(o);
+  });
+}
+
+function renderQuestion(){
+  $('questionArea').textContent = ROUNDS[currentIndex].q;
+  $('tilesArea').innerHTML='';
+  ROUNDS[currentIndex].a.forEach(ans=>{
+    let t=document.createElement('div'); t.className='tile'; t.textContent=ans;
+    t.onclick=()=>{ t.classList.add('revealed'); playSound('reveal'); };
+    $('tilesArea').appendChild(t);
+  });
+}
+
+function playSound(kind){ try{ const ctx = new (window.AudioContext||window.webkitAudioContext)(); if(kind==='reveal'){ const o=ctx.createOscillator(), g=ctx.createGain(); o.type='sine'; o.frequency.value=880; g.gain.value=0.08; o.connect(g); g.connect(ctx.destination); o.start(); setTimeout(()=>{ o.stop(); ctx.close(); },120); } else if(kind==='drum'){ const o=ctx.createOscillator(), g=ctx.createGain(); o.type='square'; o.frequency.value=120; g.gain.value=0.18; o.connect(g); g.connect(ctx.destination); o.start(); setTimeout(()=>{ o.stop(); ctx.close(); },220); } }catch(e){console.log('Sound error',e);} }
+
+$('nextRound').onclick = ()=>{ currentIndex = (currentIndex+1) % ROUNDS.length; $('roundSelect').value = currentIndex; renderQuestion(); };
+$('prevRound').onclick = ()=>{ currentIndex = (currentIndex+ROUNDS.length)%ROUNDS.length; $('roundSelect').value = currentIndex; renderQuestion(); };
+$('roundSelect').onchange = function(){ currentIndex = Number(this.value); renderQuestion(); };
+$('revealAll').onclick = ()=>{
+  document.querySelectorAll('.tile').forEach(t=>t.classList.add('revealed'));
+  playSound('reveal');
+};
+$('shuffleOrder').onclick = ()=>{ for(let i=ROUNDS.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [ROUNDS[i],ROUNDS[j]]=[ROUNDS[j],ROUNDS[i]] } renderRoundSelect(); renderQuestion(); };
+$('autoRotate').onclick = ()=>{ autoRotate = !autoRotate; $('autoRotate').textContent = `Auto Rotate: ${autoRotate? 'ON':'OFF'}`; if(autoRotate){ autoTimer = setInterval(()=>{ $('nextRound').click(); }, 120000); } else { clearInterval(autoTimer); }};
+
+renderRoundSelect(); renderQuestion();
+</script>
+</body>
+</html>
