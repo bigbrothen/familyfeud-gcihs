@@ -1,312 +1,166 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GCIHS Family Feud</title>
-<style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body,html{height:100vh;background:#000428;color:white;font-family:"Arial Black",sans-serif;overflow:hidden;display:flex;flex-direction:column;}
-
-  .top{background:#000;padding:10px 0;box-shadow:0 4px 20px gold; z-index: 10;}
-  .title{font-size:5vh;color:#ff0;text-shadow:0 0 25px gold;letter-spacing:4px;text-align:center;margin-bottom: 5px;}
-  
-  .scores{display:flex;justify-content:center;gap:50px;}
-  .team{font-size:3vh;background:#111;padding:10px 30px;border-radius:15px;border:4px solid #444;box-shadow:0 0 10px #444;transition:0.4s; text-align: center; min-width: 200px;}
-  .team span{display:block; font-size:5vh;color:#fff;}
-  
-  /* Active Team Styling */
-  .team.active{border-color:gold;box-shadow:0 0 50px gold;transform:scale(1.1); background: #220;}
-  .team.active span{color:#ff0;}
-
-  /* Question Box */
-  .question{background:#ffcc00;color:#000;font-size:3vh;padding:15px;margin:15px auto;border-radius:20px;width:90%;text-align:center;box-shadow:0 0 25px gold; min-height: 80px; display:flex; align-items:center; justify-content:center; line-height: 1.2;}
-
-  .nav{display:flex;justify-content:center;gap:20px;margin-bottom:10px;}
-  .nav button{padding:5px 20px;font-size:2.5vh;background:#ffd700;color:#000;border:none;border-radius:10px;cursor:pointer; font-weight:bold;}
-  .nav button:hover{background: white;}
-
-  /* THE BOARD - Fixed Grid */
-  .board{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:0 50px;align-content:start;overflow-y:auto;}
-  
-  /* CARD STYLING - Fixed text alignment issues here */
-  .card{
-    height:75px; /* Fixed height to keep uniform */
-    background:#003399;
-    border:4px solid #ffd700;
-    border-radius:10px;
-    position:relative;
-    cursor:pointer;
-    perspective: 1000px;
-  }
-
-  .front, .back {
-    position:absolute;
-    inset:0;
-    display:flex;
-    align-items:center;
-    padding:0 15px;
-    font-weight:bold;
-    backface-visibility: hidden;
-    transition: transform 0.6s;
-  }
-
-  /* The Blue Front with Number */
-  .front {
-    background: linear-gradient(135deg, #003399, #001133);
-    color: #ffd700;
-    justify-content:center;
-    font-size: 5vh;
-    text-shadow: 2px 2px 0 #000;
-    border: 2px solid #0044cc;
-    z-index: 2;
-    transform: rotateY(0deg);
-  }
-
-  /* The Revealed Answer */
-  .back {
-    background: #ececec; /* Light background for readability */
-    color: #000;
-    transform: rotateY(180deg);
-    font-size: 2.2vh; /* Much smaller font to fit text */
-    justify-content: space-between; /* Pushes points to the right */
-    border: 2px solid #fff;
-    text-transform: uppercase;
-  }
-
-  /* Flip Logic */
-  .card.flipped .front { transform: rotateY(180deg); }
-  .card.flipped .back { transform: rotateY(0deg); }
-
-  /* Points Box inside the answer */
-  .points-box {
-    background: #000428;
-    color: #ffd700;
-    padding: 5px 10px;
-    min-width: 50px;
-    text-align: center;
-    border-radius: 5px;
-    margin-left: 10px;
-    font-size: 2.5vh;
-  }
-
-  /* Controls Area */
-  .controls{display:flex;justify-content:center;gap:20px;padding:10px;background:#000428;}
-  .controls button{padding:10px 25px;font-size:2.5vh;background:#444;color:white;border:none;border-radius:10px;cursor:pointer; transition: 0.2s;}
-  .controls button:hover{background: #666;}
-  #wrong{background:#c00; font-weight: bold;}
-  #wrong:hover{background: #f00;}
-
-  /* Strikes */
-  .strike-container{display:flex;justify-content:center;gap:15px;margin:5px 0;}
-  .strike{font-size:8vh;color:#c00;opacity:0.2;transition:0.3s;text-shadow:0 0 10px red;}
-  .strike.on{opacity:1; text-shadow:0 0 40px red; transform: scale(1.2);}
-
-  /* Full Screen X Animation */
-  .strike-full{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);font-size:60vh;color:#c00;z-index:999;text-shadow:0 0 50px red;pointer-events:none;opacity:0; font-family: sans-serif;}
-  .strike-full.show{animation:strike 1.5s forwards;}
-  
-  @keyframes strike{
-    0%   {transform:translate(-50%,-50%) scale(0); opacity:0;}
-    20%  {transform:translate(-50%,-50%) scale(1); opacity:1;}
-    80%  {transform:translate(-50%,-50%) scale(1); opacity:1;}
-    100% {transform:translate(-50%,-50%) scale(0); opacity:0;}
-  }
-</style>
-</head>
-<body>
-
-<div class="top">
-  <div class="title">GCIHS FAMILY FEUD</div>
-  <div class="scores">
-    <div class="team active" id="t1">TEAM 1 <span id="s1">0</span></div>
-    <div class="team" id="t2">TEAM 2 <span id="s2">0</span></div>
-  </div>
-</div>
-
-<div class="question" id="qtext">Loading...</div>
-
-<div class="nav">
-  <button onclick="prev()">◄ PREV</button>
-  <button onclick="next()">NEXT ►</button>
-</div>
-
-<div class="board" id="board"></div>
-
-<div class="strike-container">
-  <span class="strike" id="x1">X</span>
-  <span class="strike" id="x2">X</span>
-  <span class="strike" id="x3">X</span>
-</div>
-
-<div class="controls">
-  <button onclick="revealAll()">REVEAL ALL</button>
-  <button onclick="resetRound()">RESET ROUND</button>
-  <button id="wrong" onclick="wrong()">WRONG!</button>
-</div>
-
-<div class="strike-full" id="strike">X</div>
-
 <script>
-// NOTE: Add your own sound files here or the browser console will show errors, 
-// but the game will still work.
-const audioDing = new Audio('ding.mp3'); // Rename to your file
-const audioBuzz = new Audio('buzzer.mp3'); // Rename to your file
+// IMPORTANT: You MUST place your audio files in the same directory as this HTML file,
+// OR change the filenames below to the correct path (e.g., 'sounds/ding.mp3').
+const audioDing = new Audio('correct_answer.mp3'); // <-- CHANGE THIS FILENAME
+const audioBuzz = new Audio('wrong_answer.mp3'); // <-- CHANGE THIS FILENAME
 
-function ding() { 
-    // Plays sound if file exists, otherwise ignores
-    audioDing.play().catch(e => console.log("No ding sound found")); 
+function playCorrect() { 
+    // Plays the "ding" sound for a correct answer
+    audioDing.currentTime = 0; // Rewind to start for quick successive plays
+    audioDing.play().catch(e => console.log("No correct sound file found: " + e.message)); 
 }
-function buzzer() { 
-    audioBuzz.play().catch(e => console.log("No buzzer sound found")); 
+function playWrong() { 
+    // Plays the "buzzer" sound for a wrong answer
+    audioBuzz.currentTime = 0; // Rewind to start
+    audioBuzz.play().catch(e => console.log("No wrong sound file found: " + e.message)); 
 }
 
 const ROUNDS = [
-  {q:"Most famous student in the school", a:[ ["Starboy",22], ["Jesse Owusu",16], ["Don Lomo",12], ["Robski",7], ["Ella Ofori",4], ["Nakaesha",3], ["Kilobizzy (Ivan Nyarko)",3], ["Miezah",3] ]},
-  {q:"Craziest things that have happened this term", a:[ ["Pastor Botchway’s cane",22], ["Lady of the week scandal",14], ["46 WASSCE students suspended",10], ["Sexual misconducts",10], ["200+ students went home (flu)",5], ["GCIHS Memes Instagram",4], ["Lashing of Year 10 Boys",3] ]},
-  {q:"Name a Pastor Botchway thing that makes students panic", a:[ ["I will cane you",18], ["Go back",12], ["STOP!!!!!!",9], ["I will lash you",6], ["Foolish boy",7], ["Stand UP (sleeping)",1], ["please i don’t know",1] ]},
-  {q:"Name something a student definitely does not want to find in their school lunch", a:[ ["Maggots",34], ["A strand of hair",9], ["House flies",10], ["A tooth",7], ["Uncooked food",3], ["Stones",3] ]},
-  {q:"Name something a student might want to hide in their locker", a:[ ["Provisions",45], ["Chromebook",6], ["Perfume",5], ["Mifi",4], ["Calculator",2], ["Money",1], ["Phones",1] ]},
-  {q:"Name something you hear in the dorm after lights out in the boys dorm", a:[ ["CEO dey dorm",17], ["Housemasters Keys",15], ["Starboy shouting lights out",14], ["Tumi and Kobby",9], ["Countdown",6], ["Glass breaking",4] ]},
-  {q:"Name something a student might pretend isn’t theirs if it falls on the classroom floor", a:[ ["Shankroll",43], ["Sanitary Pad",12], ["Cutlery",5], ["Rubbish",4], ["A metal bottle",3], ["Provisions",2] ]},
-  {q:"Name something a student might try to hide from their parents if they came to visit school", a:[ ["Their Progressives Scores",29], ["Mr Eshun",17], ["Their Teachers",15], ["Their discoloured teeth",2], ["House Staff",1], ["Their classmates",1] ]},
-  {q:"Name a teacher students are lowkey afraid of", a:[ ["Pastor Botchway",28], ["Mr Eshun",13], ["Mr Setsofia",6], ["Mrs Cornelia",6], ["Miss Ivy",5], ["Ms Christiana",5], ["Mr Kumador",2], ["Mr Ato",2] ]},
-  {q:"Best teacher’s nicknames", a:[ ["Abodie",27], ["Poison Ivy",11], ["Bobbbb",9], ["D² 144",4], ["Lolo",4], ["JB",3], ["Bykomas",2], ["Setsos",2], ["Don Sammy",1] ]},
-  {q:"Name a popular snack students take in school", a:[ ["Cocoa",28], ["Sausage roll",22], ["Bread",13], ["Plantain chips",6], ["Grapes",3], ["Tangerine",1] ]},
-  {q:"Name something that distracts students during lessons", a:[ ["Chromebook",28], ["Sleep",17], ["Random Inspections",4], ["The pantry smell",2], ["Significant other",2], ["The teacher’s hair",2], ["Mr Eshun",1] ]},
-  {q:"Name something teachers say all the time", a:[ ["When I was your age",27], ["You people have it easy",16], ["My work is 30% yours is 70%",13], ["Chromebook commands",5], ["Please I don’t know",1], ["I’ll be done soon",1], ["You people must learn",1], ["Take your studies serious",1] ]},
-  {q:"Name something students whisper about in class", a:[ ["The teachers dressing",33], ["Pending DC cases",27], ["Unidentified smell",10] ]},
-  {q:"Name a situation where students wish they could rewind time", a:[ ["Falling in front of crowd",32], ["Caught on camera doing wrong",31], ["Dropping their food/snack",3] ]},
-  {q:"Name something that causes chaos in the school", a:[ ["Inspections",41], ["Power cuts",15], ["No water in school",13], ["Disagreements",5] ]},
-  {q:"Name something you might find in a student’s tote bag", a:[ ["Lipgloss and oil",45], ["Money",9], ["Shankroll",7], ["Chromebook",6], ["Pad",4], ["Perfume",2] ]},
-  {q:"Name a reason someone would get called to the principal’s office", a:[ ["Sexual Misconduct",38], ["Disrespecting a teacher",19], ["Hair",4] ]},
-  {q:"Name something people say to act like they’re not offended, but they are", a:[ ["It is fine dont worry",26], ["Echill",25], ["I have not vex ooo",10] ]},
-  {q:"Name something that instantly embarrasses a student", a:[ ["Sacked from diet line",27], ["Called to stage for clothes",17], ["Pastor Botchway: GO BACK",14], ["Dirtiest locker or bed",7], ["Dropping plates or cutlery",4], ["Losing an argument",2], ["Disciplinary committee",1] ]},
-  {q:"Best ways which students sack teachers from the classroom", a:[ ["Sir please it’s time",38], ["When does period end?",17], ["Sleeping",3], ["Who said period is over",3], ["Leaving the Classroom",1], ["Alarm",1] ]},
-  {q:"Name the most stolen thing in the dorms", a:[ ["Water",22], ["Socks",15], ["Bucket",14], ["Iron",7], ["Sponge",3], ["Undergarments",1] ]},
-  {q:"Name something people do during visiting", a:[ ["Jumping from parents",31], ["Flexing their phones",22], ["Meeting significant others",8], ["Flexing family members",3], ["People cooking Budak",1] ]},
-  {q:"Name something that disappears in school faster than anything else", a:[ ["Water",18], ["Peoples innocence",17], ["Earpiece",10], ["Money",6], ["Cocoa",4], ["Sausage roll",3], ["Yoghurt",3], ["Provisions",1] ]},
-  {q:"Name something that can ruin someone’s morning fast", a:[ ["No water flowing",12], ["Mr. Eshun coming on stage",11], ["Hausa koko",10], ["Locked inside the dorm",10], ["Bad bread",10], ["Mr. Blemano’s announcement",8], ["Skirt inspection",3] ]},
-  {q:"What is the craziest Christian High myth", a:[ ["Mention name they appear",34], ["Three-breasted woman",27], ["Demon in Dorm 3 (boys)",2], ["Dispenser water gives typhoid",1], ["Snakes in dorm",1], ["MPT teasing",1], ["Sacked teachers b/c failure",1], ["Christian High is good",1] ]},
-  {q:"Name something a teacher does that instantly annoys students", a:[ ["Surprise tests",23], ["Jon jokes / dry jokes",18], ["Testing unlearned topics",10], ["False accusations",10], ["Mentioning marks out loud",9], ["Coming to class too early",8] ]},
-  {q:"Name something students brag about that no one asked for", a:[ ["Trips they have taken",24], ["Going out for events",14], ["Parents' cars",8], ["Their sneakers",8], ["Price of gadgets",6], ["First in class / academic",6], ["Amount of food eaten",6], ["Their house (hostel/block)",1] ]},
-  {q:"Name something people panic about when someone shouts “inspection!", a:[ ["Illegals in locker",43], ["State of locker (messy)",11], ["Written devotion notes?",8], ["Today's quiet time?",7], ["State of their beds",2], ["Apostles’ Creed?",1] ]},
-  {q:"Name something that spreads fast in school besides gossip", a:[ ["DC cases",31], ["Yogurt at tuck shop",14], ["Inspections happening",10], ["Dorm issues",6], ["The flu",4], ["A fight going on",3], ["Pastor Botchway is in school",3], ["Pantry serving new food",1] ]},
-  {q:"Name something C-high students pretend to like but actually hate", a:[ ["Prefects",25], ["Sunday Church Service",17], ["Vespers",9], ["Some teachers",7], ["Classmates",6], ["Quiet time",3], ["Hausa koko",2] ]},
-  {q:"Name something students do or say when trying to avoid chores", a:[ ["I have a medical report",29], ["Let me drop this & come",20], ["I have been sent",10], ["I don't know how to do it",3], ["Mom said I should not work",1], ["I need to use washroom",1] ]},
-  {q:"Name something people do to impress others", a:[ ["Wear snatched Teedees",29], ["Not taking cocoa",20], ["Toasting in public",10], ["Buying 60 cedis grapes",1], ["Walk slowly",1], ["Oiling their body",1], ["Using perfumes",1] ]},
-  {q:"If all the year groups fought, which one would win easily", a:[ ["Year 12 WASSCE",40], ["Year 12 & 13 Cambridge",10], ["Year 11 Cambridge",10], ["Year 10 Cambridge",3], ["Year 11 WASSCE",1] ]},
-  {q:"If you wake up during surgery, what would you hate to see your surgeon holding", a:[ ["A part of my body",38], ["Sharwarma",13], ["Their phone",8], ["Knife",5], ["Gun",2] ]},
-  {q:"What gives you the ick", a:[ ["Someone who smells",20], ["Girls That speak pidgin",19], ["Guy feels himself too much",16], ["Girls with attitudes",7], ["Giving side-eye",2], ["Thirst traps",1] ]}
+  {q:"Most famous student in the school", a:[ ["Starboy",22], ["Jesse Owusu",16], ["Don Lomo",12], ["Robski",7], ["Ella Ofori",4], ["Nakaesha",3], ["Kilobizzy (Ivan Nyarko)",3], ["Miezah",3] ]},
+  {q:"Craziest things that have happened this term", a:[ ["Pastor Botchway’s cane",22], ["Lady of the week scandal",14], ["46 WASSCE students suspended",10], ["Sexual misconducts",10], ["200+ students went home (flu)",5], ["GCIHS Memes Instagram",4], ["Lashing of Year 10 Boys",3] ]},
+  {q:"Name a Pastor Botchway thing that makes students panic", a:[ ["I will cane you",18], ["Go back",12], ["STOP!!!!!!",9], ["I will lash you",6], ["Foolish boy",7], ["Stand UP (sleeping)",1], ["please i don’t know",1] ]},
+  {q:"Name something a student definitely does not want to find in their school lunch", a:[ ["Maggots",34], ["A strand of hair",9], ["House flies",10], ["A tooth",7], ["Uncooked food",3], ["Stones",3] ]},
+  {q:"Name something a student might want to hide in their locker", a:[ ["Provisions",45], ["Chromebook",6], ["Perfume",5], ["Mifi",4], ["Calculator",2], ["Money",1], ["Phones",1] ]},
+  {q:"Name something you hear in the dorm after lights out in the boys dorm", a:[ ["CEO dey dorm",17], ["Housemasters Keys",15], ["Starboy shouting lights out",14], ["Tumi and Kobby",9], ["Countdown",6], ["Glass breaking",4] ]},
+  {q:"Name something a student might pretend isn’t theirs if it falls on the classroom floor", a:[ ["Shankroll",43], ["Sanitary Pad",12], ["Cutlery",5], ["Rubbish",4], ["A metal bottle",3], ["Provisions",2] ]},
+  {q:"Name something a student might try to hide from their parents if they came to visit school", a:[ ["Their Progressives Scores",29], ["Mr Eshun",17], ["Their Teachers",15], ["Their discoloured teeth",2], ["House Staff",1], ["Their classmates",1] ]},
+  {q:"Name a teacher students are lowkey afraid of", a:[ ["Pastor Botchway",28], ["Mr Eshun",13], ["Mr Setsofia",6], ["Mrs Cornelia",6], ["Miss Ivy",5], ["Ms Christiana",5], ["Mr Kumador",2], ["Mr Ato",2] ]},
+  {q:"Best teacher’s nicknames", a:[ ["Abodie",27], ["Poison Ivy",11], ["Bobbbb",9], ["D² 144",4], ["Lolo",4], ["JB",3], ["Bykomas",2], ["Setsos",2], ["Don Sammy",1] ]},
+  {q:"Name a popular snack students take in school", a:[ ["Cocoa",28], ["Sausage roll",22], ["Bread",13], ["Plantain chips",6], ["Grapes",3], ["Tangerine",1] ]},
+  {q:"Name something that distracts students during lessons", a:[ ["Chromebook",28], ["Sleep",17], ["Random Inspections",4], ["The pantry smell",2], ["Significant other",2], ["The teacher’s hair",2], ["Mr Eshun",1] ]},
+  {q:"Name something teachers say all the time", a:[ ["When I was your age",27], ["You people have it easy",16], ["My work is 30% yours is 70%",13], ["Chromebook commands",5], ["Please I don’t know",1], ["I’ll be done soon",1], ["You people must learn",1], ["Take your studies serious",1] ]},
+  {q:"Name something students whisper about in class", a:[ ["The teachers dressing",33], ["Pending DC cases",27], ["Unidentified smell",10] ]},
+  {q:"Name a situation where students wish they could rewind time", a:[ ["Falling in front of crowd",32], ["Caught on camera doing wrong",31], ["Dropping their food/snack",3] ]},
+  {q:"Name something that causes chaos in the school", a:[ ["Inspections",41], ["Power cuts",15], ["No water in school",13], ["Disagreements",5] ]},
+  {q:"Name something you might find in a student’s tote bag", a:[ ["Lipgloss and oil",45], ["Money",9], ["Shankroll",7], ["Chromebook",6], ["Pad",4], ["Perfume",2] ]},
+  {q:"Name a reason someone would get called to the principal’s office", a:[ ["Sexual Misconduct",38], ["Disrespecting a teacher",19], ["Hair",4] ]},
+  {q:"Name something people say to act like they’re not offended, but they are", a:[ ["It is fine dont worry",26], ["Echill",25], ["I have not vex ooo",10] ]},
+  {q:"Name something that instantly embarrasses a student", a:[ ["Sacked from diet line",27], ["Called to stage for clothes",17], ["Pastor Botchway: GO BACK",14], ["Dirtiest locker or bed",7], ["Dropping plates or cutlery",4], ["Losing an argument",2], ["Disciplinary committee",1] ]},
+  {q:"Best ways which students sack teachers from the classroom", a:[ ["Sir please it’s time",38], ["When does period end?",17], ["Sleeping",3], ["Who said period is over",3], ["Leaving the Classroom",1], ["Alarm",1] ]},
+  {q:"Name the most stolen thing in the dorms", a:[ ["Water",22], ["Socks",15], ["Bucket",14], ["Iron",7], ["Sponge",3], ["Undergarments",1] ]},
+  {q:"Name something people do during visiting", a:[ ["Jumping from parents",31], ["Flexing their phones",22], ["Meeting significant others",8], ["Flexing family members",3], ["People cooking Budak",1] ]},
+  {q:"Name something that disappears in school faster than anything else", a:[ ["Water",18], ["Peoples innocence",17], ["Earpiece",10], ["Money",6], ["Cocoa",4], ["Sausage roll",3], ["Yoghurt",3], ["Provisions",1] ]},
+  {q:"Name something that can ruin someone’s morning fast", a:[ ["No water flowing",12], ["Mr. Eshun coming on stage",11], ["Hausa koko",10], ["Locked inside the dorm",10], ["Bad bread",10], ["Mr. Blemano’s announcement",8], ["Skirt inspection",3] ]},
+  {q:"What is the craziest Christian High myth", a:[ ["Mention name they appear",34], ["Three-breasted woman",27], ["Demon in Dorm 3 (boys)",2], ["Dispenser water gives typhoid",1], ["Snakes in dorm",1], ["MPT teasing",1], ["Sacked teachers b/c failure",1], ["Christian High is good",1] ]},
+  {q:"Name something a teacher does that instantly annoys students", a:[ ["Surprise tests",23], ["Jon jokes / dry jokes",18], ["Testing unlearned topics",10], ["False accusations",10], ["Mentioning marks out loud",9], ["Coming to class too early",8] ]},
+  {q:"Name something students brag about that no one asked for", a:[ ["Trips they have taken",24], ["Going out for events",14], ["Parents' cars",8], ["Their sneakers",8], ["Price of gadgets",6], ["First in class / academic",6], ["Amount of food eaten",6], ["Their house (hostel/block)",1] ]},
+  {q:"Name something people panic about when someone shouts “inspection!", a:[ ["Illegals in locker",43], ["State of locker (messy)",11], ["Written devotion notes?",8], ["Today's quiet time?",7], ["State of their beds",2], ["Apostles’ Creed?",1] ]},
+  {q:"Name something that spreads fast in school besides gossip", a:[ ["DC cases",31], ["Yogurt at tuck shop",14], ["Inspections happening",10], ["Dorm issues",6], ["The flu",4], ["A fight going on",3], ["Pastor Botchway is in school",3], ["Pantry serving new food",1] ]},
+  {q:"Name something C-high students pretend to like but actually hate", a:[ ["Prefects",25], ["Sunday Church Service",17], ["Vespers",9], ["Some teachers",7], ["Classmates",6], ["Quiet time",3], ["Hausa koko",2] ]},
+  {q:"Name something students do or say when trying to avoid chores", a:[ ["I have a medical report",29], ["Let me drop this & come",20], ["I have been sent",10], ["I don't know how to do it",3], ["Mom said I should not work",1], ["I need to use washroom",1] ]},
+  {q:"Name something people do to impress others", a:[ ["Wear snatched Teedees",29], ["Not taking cocoa",20], ["Toasting in public",10], ["Buying 60 cedis grapes",1], ["Walk slowly",1], ["Oiling their body",1], ["Using perfumes",1] ]},
+  {q:"If all the year groups fought, which one would win easily", a:[ ["Year 12 WASSCE",40], ["Year 12 & 13 Cambridge",10], ["Year 11 Cambridge",10], ["Year 10 Cambridge",3], ["Year 11 WASSCE",1] ]},
+  {q:"If you wake up during surgery, what would you hate to see your surgeon holding", a:[ ["A part of my body",38], ["Sharwarma",13], ["Their phone",8], ["Knife",5], ["Gun",2] ]},
+  {q:"What gives you the ick", a:[ ["Someone who smells",20], ["Girls That speak pidgin",19], ["Guy feels himself too much",16], ["Girls with attitudes",7], ["Giving side-eye",2], ["Thirst traps",1] ]}
 ];
 
 let cur = 0, strikes = 0, boardPoints = 0, activeTeam = 1, team1Score = 0, team2Score = 0;
 
 function load(){
-  document.getElementById("qtext").textContent = ROUNDS[cur].q.toUpperCase();
-  const b = document.getElementById("board"); 
-  b.innerHTML = "";
-  boardPoints = 0;
-  strikes = 0;
-  updateStrikes();
-  
-  // Pad answers to ensure empty slots if less than 8
-  const sortedA = [...ROUNDS[cur].a].sort((a,b) => b[1] - a[1]);
-  
-  // We create 8 slots always for visual consistency (or however many max you want)
-  // But usually family feud just shows available answers. 
-  // Your original code just showed available. We'll stick to that.
-  
-  sortedA.forEach(([ans, pts], i) => {
-    const c = document.createElement("div"); 
-    c.className = "card";
-    // Added number to Front, and points-box to Back
-    c.innerHTML = `
-        <div class="front">${i + 1}</div>
-        <div class="back">
-            <span>${ans}</span>
-            <div class="points-box">${pts}</div>
-        </div>
-    `;
-    c.dataset.points = pts;
-    
-    c.onclick = () => {
-      if (!c.classList.contains("flipped")) {
-        c.classList.add("flipped");
-        ding();
-        // Add points to current round accumulator (usually family feud adds to bank, then bank goes to team)
-        // But in this simple version, we'll just track it visually.
-        boardPoints += pts; 
-      }
-    };
-    b.appendChild(c);
-  });
+  document.getElementById("qtext").textContent = ROUNDS[cur].q.toUpperCase();
+  const b = document.getElementById("board"); 
+  b.innerHTML = "";
+  boardPoints = 0;
+  strikes = 0;
+  updateStrikes();
+  
+  // Pad answers to ensure empty slots if less than 8
+  const sortedA = [...ROUNDS[cur].a].sort((a,b) => b[1] - a[1]);
+  
+  // We create 8 slots always for visual consistency (or however many max you want)
+  // But usually family feud just shows available answers. 
+  // Your original code just showed available. We'll stick to that.
+  
+  sortedA.forEach(([ans, pts], i) => {
+    const c = document.createElement("div"); 
+    c.className = "card";
+    // Added number to Front, and points-box to Back
+    c.innerHTML = `
+        <div class="front">${i + 1}</div>
+        <div class="back">
+            <span>${ans}</span>
+            <div class="points-box">${pts}</div>
+        </div>
+    `;
+    c.dataset.points = pts;
+    
+    c.onclick = () => {
+      if (!c.classList.contains("flipped")) {
+        c.classList.add("flipped");
+        playCorrect(); // <<< CALLED NEW FUNCTION HERE
+        // Add points to current round accumulator (usually family feud adds to bank, then bank goes to team)
+        // But in this simple version, we'll just track it visually.
+        boardPoints += pts; 
+      }
+    };
+    b.appendChild(c);
+  });
 }
 
 function updateStrikes(){
-  document.querySelectorAll(".strike").forEach((s,i) => s.classList.toggle("on", i < strikes));
+  document.querySelectorAll(".strike").forEach((s,i) => s.classList.toggle("on", i < strikes));
 }
 
 function wrong(){
-  strikes++;
-  updateStrikes();
-  buzzer();
-  showX();
-  
-  if (strikes === 3) {
-    setTimeout(() => {
-      const steal = prompt(`Team ${activeTeam === 1 ? "2" : "1"} Steal? (y/n)`);
-      if (steal && steal.toLowerCase() === "y") {
-         // Points go to other team
-         let stealingTeam = activeTeam === 1 ? 2 : 1;
-         awardPoints(stealingTeam, boardPoints);
-         alert(`Team ${stealingTeam} stole ${boardPoints} points!`);
-      } else {
-         // Points stay with original team
-         awardPoints(activeTeam, boardPoints);
-         alert(`Team ${activeTeam} keeps ${boardPoints} points!`);
-      }
-      resetRound(); // Clean up strikes
-    }, 500);
-  }
+  strikes++;
+  updateStrikes();
+  playWrong(); // <<< CALLED NEW FUNCTION HERE
+  showX();
+  
+  if (strikes === 3) {
+    setTimeout(() => {
+      const steal = prompt(`Team ${activeTeam === 1 ? "2" : "1"} Steal? (y/n)`);
+      if (steal && steal.toLowerCase() === "y") {
+         // Points go to other team
+         let stealingTeam = activeTeam === 1 ? 2 : 1;
+         awardPoints(stealingTeam, boardPoints);
+         alert(`Team ${stealingTeam} stole ${boardPoints} points!`);
+      } else {
+         // Points stay with original team
+         awardPoints(activeTeam, boardPoints);
+         alert(`Team ${activeTeam} keeps ${boardPoints} points!`);
+      }
+      resetRound(); // Clean up strikes
+    }, 500);
+  }
 }
 
 function awardPoints(team, pts){
-    if(team === 1) {
-        team1Score += pts;
-        document.getElementById("s1").textContent = team1Score;
-    } else {
-        team2Score += pts;
-        document.getElementById("s2").textContent = team2Score;
-    }
+    if(team === 1) {
+        team1Score += pts;
+        document.getElementById("s1").textContent = team1Score;
+    } else {
+        team2Score += pts;
+        document.getElementById("s2").textContent = team2Score;
+    }
 }
 
 function showX(){
-  const x = document.getElementById("strike");
-  x.classList.remove("show");
-  void x.offsetWidth; // Trigger reflow
-  x.classList.add("show");
+  const x = document.getElementById("strike");
+  x.classList.remove("show");
+  void x.offsetWidth; // Trigger reflow
+  x.classList.add("show");
 }
 
-function revealAll() { 
-    document.querySelectorAll(".card").forEach(c => {
-      if (!c.classList.contains("flipped")) {
-        c.classList.add("flipped");
-        boardPoints += Number(c.dataset.points);
-      }
-    });
-    // If we reveal all, usually the round is over and points go to active team
-    setTimeout(() => {
-         if(confirm("Add accumulated points to Active Team?")) {
-             awardPoints(activeTeam, boardPoints);
-         }
-    }, 1000);
+function revealAll() { 
+    document.querySelectorAll(".card").forEach(c => {
+      if (!c.classList.contains("flipped")) {
+        c.classList.add("flipped");
+        boardPoints += Number(c.dataset.points);
+      }
+    });
+    // If we reveal all, usually the round is over and points go to active team
+    setTimeout(() => {
+         if(confirm("Add accumulated points to Active Team?")) {
+             awardPoints(activeTeam, boardPoints);
+         }
+    }, 1000);
 }
 
 function resetRound() {
-    strikes = 0;
-    boardPoints = 0;
-    updateStrikes();
+    strikes = 0;
+    boardPoints = 0;
+    updateStrikes();
 }
 
 function next() { cur = (cur + 1) % ROUNDS.length; load(); }
@@ -314,18 +168,15 @@ function prev() { cur = (cur - 1 + ROUNDS.length) % ROUNDS.length; load(); }
 
 // Keyboard shortcuts
 document.addEventListener("keydown", e => {
-  if (e.key === "ArrowRight") next();
-  if (e.key === "ArrowLeft") prev();
-  if (e.key === "t" || e.key === "T") {
-    activeTeam = activeTeam === 1 ? 2 : 1;
-    document.querySelectorAll(".team").forEach(t => t.classList.remove("active"));
-    document.getElementById("t" + activeTeam).classList.add("active");
-  }
-  if (e.key === "x" || e.key === "X") { wrong(); } // Changed space to X to avoid accidental hits
+  if (e.key === "ArrowRight") next();
+  if (e.key === "ArrowLeft") prev();
+  if (e.key === "t" || e.key === "T") {
+    activeTeam = activeTeam === 1 ? 2 : 1;
+    document.querySelectorAll(".team").forEach(t => t.classList.remove("active"));
+    document.getElementById("t" + activeTeam).classList.add("active");
+  }
+  if (e.key === "x" || e.key === "X") { wrong(); } // Changed space to X to avoid accidental hits
 });
 
 load();
 </script>
-</body>
-</html>
-
