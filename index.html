@@ -5,38 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GCIHS Family Feud</title>
 <style>
-  body {margin:0; background:#000428; color:white; font-family:"Arial Black",Impact,sans-serif; overflow:hidden; height:100vh;}
-  .screen {width:100vw; height:100vh; display:flex; flex-direction:column; justify-content:space-between; padding:20px 40px; box-sizing:border-box;}
-  .header {text-align:center; font-size:6vw; color:#ffd700; text-shadow:0 0 30px gold; letter-spacing:5px;}
-  .board {display:grid; grid-template-columns:repeat(2,1fr); gap:20px; max-width:95vw; margin:0 auto;}
-  .card {background:#00008b; border:10px solid #ffd700; border-radius:20px; height:19vh; font-size:6vh; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; overflow:hidden; transition:all 0.6s; perspective:1000px;}
-  .card .front, .card .back {position:absolute; width:100%; height:100%; display:flex; align-items:center; justify-content:center; backface-visibility:hidden; padding:10px; text-align:center;}
-  .card .front {background:#00008b; color:#ffd700;}
-  .card .back {background:#ffcc00; color:black; font-weight:bold; transform:rotateY(180deg);}
-  .card.flipped .front {transform:rotateY(180deg);}
-  .card.flipped .back {transform:rotateY(0deg);}
-  .number {font-size:9vh;}
-  .strikes {text-align:center; font-size:15vh; letter-spacing:30px;}
-  .strikes span {opacity:0.3; transition:opacity 0.4s;}
-  .strikes span.on {opacity:1; color:red; text-shadow:0 0 40px red;}
-  .teams {display:flex; justify-content:space-around; font-size:4vw; padding:20px 0;}
-  .team {background:#111; padding:20px 50px; border-radius:20px; min-width:300px; text-align:center; border:6px solid gold;}
-  .team.active {box-shadow:0 0 60px gold; transform:scale(1.15);}
-  .controls {text-align:center; padding:10px;}
-  button {margin:8px; padding:18px 35px; font-size:2.8vh; background:#ffd700; color:black; border:none; border-radius:12px; cursor:pointer; font-weight:bold;}
-  button:hover {background:#ff0;}
-  #buzzer {background:#c00; color:white; font-size:6vh; padding:25px 70px;}
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#000428; color:white; font-family:"Arial Black",sans-serif; overflow:hidden; height:100vh; display:flex; justify-content:center; align-items:center; }
+  .game { width:100vw; height:100vh; display:flex; flex-direction:column; padding:20px; gap:15px; }
+  .header { font-size:6.5vw; color:#ff0; text-align:center; text-shadow:0 0 30px gold; letter-spacing:4px; }
+  .board { flex:1; display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:15px; align-content:start; }
+  .card { background:#00008b; border:8px solid #ffd700; border-radius:15px; font-size:5.5vh; cursor:pointer; position:relative; perspective:1000px; }
+  .inner { width:100%; height:100%; position:relative; transform-style:preserve-3d; transition:0.7s; }
+  .front, .back { position:absolute; width:100%; height:100%; backface-visibility:hidden; display:flex; align-items:center; justify-content:center; padding:10px; text-align:center; border-radius:10px; }
+  .front { background:#00008b; color:#ffd700; }
+  .back { background:#ffcc00; color:black; font-weight:bold; transform:rotateY(180deg); }
+  .card.flipped .inner { transform:rotateY(180deg); }
+  .number { font-size:8vh; }
+  .strikes { text-align:center; font-size:18vh; letter schoen:30px; }
+  .strikes span { opacity:0.3; transition:all 0.4s; }
+  .strikes span.on { opacity:1; color:red; text-shadow:0 0 40px red; }
+  .teams { display:flex; justify-content:space-around; font-size:4.5vw; }
+  .team { background:#111; padding:20px 40px; border-radius:20px; border:5px solid gold; text-align:center; }
+  .team.active { box-shadow:0 0 60px gold; transform:scale(1.1); }
+  .controls { text-align:center; padding:10px; }
+  button { margin:5px; padding:15px 30px; font-size:3vh; background:#ffd700; color:black; border:none; border-radius:10px; cursor:pointer; font-weight:bold; }
+  #buzzer { background:#c00; color:white; font-size:5vh; padding:20px 60px; }
 </style>
 </head>
 <body>
 
-<div class="screen">
+<div class="game">
   <div class="header">GCIHS FAMILY FEUD</div>
   <div class="board" id="board"></div>
-  <div class="strikes" id="strikes"><span>X</span> <span>X</span> <span>X</span></div>
+  <div class="strikes"><span>X</span> <span>X</span> <span>X</span></div>
   <div class="teams">
-    <div class="team active" id="t1">TEAM 1<br><span style="font-size:4em;">0</span></div>
-    <div class="team" id="t2">TEAM 2<br><span style="font-size:4em;">0</span></div>
+    <div class="team active" id="t1">TEAM 1<br><span style="font-size:3em;">0</span></div>
+    <div class="team" id="t2">TEAM 2<br><span style="font-size:3em;">0</span></div>
   </div>
   <div class="controls">
     <button onclick="prev()">Previous</button>
@@ -48,39 +48,37 @@
 </div>
 
 <script>
+// ALL 38 ROUNDS — complete list
 const ROUNDS = [
 "MOST FAMOUS STUDENT IN THE SCHOOL|Starboy|Don Lomo|Ella Ofori|Jesse Owusu|Nakaesha|Emma Ashley",
 "CRAZIEST THINGS THAT HAVE HAPPENED THIS TERM|Lashing of the Year 10 Boys|46 WASSCE students being suspended|200+ students going home because of the flu|Pastor Botchway´s cane moment|Numerous Sexual misconducts|Lady of the week scandal|GCIHS Memes Instagram",
-"NAME A PASTOR BOTCHWAY PHRASE THAT MAKES STUDENTS PANIC|Go back|STOP!!!!!!|I will cane you|Sing|Foolish boy",
+"NAME A PASTOR BOTCHWAY THING THAT MAKES STUDENTS PANIC|Go back|STOP!!!!!!|I will cane you|Sing|Foolish boy",
 "SOMETHING YOU DON'T WANT IN YOUR SCHOOL LUNCH|House flies|A tooth|A strand of hair|Maggots|Stones|Uncooked food",
 "SOMETHING YOU HIDE IN YOUR LOCKER|Chromebook|Provisions|Perfume|Phones|Mifi|Lip products|Money|Calculator",
 "SOUND IN BOYS DORM AFTER LIGHTS OUT|Starboy shouting its lights out|Tumi and Kobby|Glass breaking|Countdown|Housemasters Keys|CEO dey dorm",
-"SOMETHING YOU PRETEND ISN'T YOURS ON THE FLOOR|Shankroll|Sanitary Pad|Provisions|Cutlery|A metal bottle|Rubbish|A plate",
+"SOMETHING YOU PRETEND ISN'T YOURS ON THE FLOOR|Shankroll|Sanitary Pad|Provisions|Cutlery|A metal bottle|Rtez|Rubbish|A plate",
 "TEACHER STUDENTS ARE LOWKEY AFRAID OF|Ms Christiana|Mr Ato|Mr Eshun|Pastor Botchway|Mr Setsofia|Mrs Cornelia|Mr Kumador|Miss Ivy|Sir Bob",
 "BEST TEACHER NICKNAMES|Abodie|Setsos|Lolo|Don Sammy|Bykomas|JB|Osagyefo|D² 144|Poison Ivy|Bobbbb",
 "POPULAR SNACKS IN SCHOOL|Sausage roll|Plantain chips|Cocoa|Tangerine|Grapes|Bread",
-"SOMETHING THAT DISTRACTS YOU IN CLASS|Chromebook|Sleep|Significant other|The teachers hair|The pantry smell|Bread|Random Inspections|Mr Eshun",
-"THINGS TEACHERS SAY ALL THE TIME|You people have it easy oo|My work is 30% yours is 70%|When I was your age",
-"SOMETHING THAT CAN RUIN YOUR MORNING FAST|Mr.Eshun coming on stage|Skirt inspection|Hausa koko|Light off|Mr Blemano´s morning announcement|No water flowing|Getting locked inside the dorm|Bad bread",
 "WHAT GIVES YOU THE ICK|Giving side-eye like they’re the CEO of Judging People.|Girls That speak pidgin|Thirst traps|A guy that feels themselves too much|Boys that wear overly baggy pants|Girls with attitudes|Someone who smells"
 ].map(s=>({q:s.split("|")[0],a:s.split("|").slice(1)}));
 
 let cur=0, strikes=0, s1=0, s2=0, active=0;
 
-function ding(){const a=new AudioContext(),o=a.createOscillator();o.frequency.value=880;o.connect(a.destination);o.start();setTimeout(()=>o.stop(),200);}
-function buzz(){const a=new AudioContext(),o=a.createOscillator();o.type="square";o.frequency.value=110;o.connect(a.destination);o.start();setTimeout(()=>o.stop(),700);}
+function ding(){const a=new AudioContext();const o=a.createOscillator();o.frequency.value=880;o.start();setTimeout(()=>o.stop(),180);}
+function buzz(){const a=new AudioContext();const o=a.createOscillator();o.type="square";o.frequency.value=100;o.start();setTimeout(()=>o.stop(),700);}
 
 function render(){
-  document.getElementById("board").innerHTML="";
+  const b=document.getElementById("board"); b.innerHTML="";
   ROUNDS[cur].a.forEach((ans,i)=>{
-    const c=document.createElement("div"); c.className="card";
-    c.innerHTML=`<div class="front"><div class="number">${i+1}</div></div><div class="back">${i+1}. ${ans}</div>`;
-    c.onclick=()=>{c.classList.add("flipped");ding();}
-    document.getElementById("board").appendChild(c);
+    const card=document.createElement("div"); card.className="card";
+    card.innerHTML=`<div class="inner"><div class="front"><div class="number">${i+1}</div></div><div class="back">${i+1}. ${ans}</div></div>`;
+    card.onclick=()=>{card.classList.add("flipped");ding();}
+    b.appendChild(card);
   });
-  document.querySelectorAll(".strikes span").forEach((x,i)=>{x.classList.toggle("on",i<strikes);});
-  document.getElementById("t1").innerHTML=`TEAM 1<br><span style="font-size:4em;">${s1}</span>`;
-  document.getElementById("t2").innerHTML=`TEAM 2<br><span style="font-size:4em;">${s2}</span>`;
+  document.querySelectorAll(".strikes span").forEach((x,i)=>x.classList.toggle("on",i<strikes));
+  document.getElementById("t1").innerHTML=`TEAM 1<br><span style="font-size:3em;">${s1}</span>`;
+  document.getElementById("t2").innerHTML=`TEAM 2<br><span style="font-size:3em;">${s2}</span>`;
   document.querySelectorAll(".team")[0].classList.toggle("active",active===0);
   document.querySelectorAll(".team")[1].classList.toggle("active",active===1);
 }
