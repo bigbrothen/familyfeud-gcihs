@@ -1,1 +1,79 @@
- 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GCIHS Family Feud</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body,html{height:100vh;background:#000428;color:white;overflow:hidden;font-family:"Arial Black",sans-serif;}
+  .main{display:flex;flex-direction:column;height:100vh;}
+  .title{font-size:8vw;color:#ff0;text-shadow:0 0 40px gold;letter-spacing:5px;text-align:center;padding:20px 0;}
+  .board{display:grid;grid-template-columns:1fr 1fr;gap:18px;width:94vw;max-width:1150px;margin:0 auto;flex:1;align-content:start;padding:10px 0;}
+  .card{height:82px;background:#0033a0;border:8px solid #ffd700;border-radius:15px;position:relative;overflow:hidden;cursor:pointer;}
+  .cover{position:absolute;inset:0;background:#0033a0;transition:0.7s;}
+  .answer{position:absolute;inset:0;background:#ffcc00;color:#000;font-size:5vh;font-weight:bold;display:flex;align-items:center;justify-content:center;padding:0 30px;text-align:center;opacity:0;transform:scale(0.9);transition:0.7s;}
+ 0.1s;}
+  .card.revealed .cover{opacity:0;transform:scale(0.9);}
+  .card.revealed .answer{opacity:1;transform:scale(1);}
+  .teams{display:flex;justify-content:space-around;padding:15px 0;}
+  .team{background:#111;padding:25px 50px;border-radius:20px;border:6px solid gold;text-align:center;}
+  .team span{font-size:6em;}
+  .team.active{box-shadow:0 0 80px gold;transform:scale(1.12);}
+  .controls{text-align:center;padding:15px;}
+  button{margin:6px;padding:16px 35px;font-size:3.5vh;background:#ffd700;color:#000;border:none;border-radius:12px;cursor:pointer;font-weight:bold;}
+  #buzzer{background:#c00;color:white;font-size:5.5vh;padding:22px 80px;}
+</style>
+</head>
+<body>
+
+<div class="main">
+  <div class="title">GCIHS FAMILY FEUD</div>
+  <div class="board" id="board"></div>
+  <div class="teams">
+    <div class="team active" id="t1">TEAM 1<br><span id="s1">0</span></div>
+    <div class="team" id="t2">TEAM 2<br><span id="s2">0</span></div>
+  </div>
+  <div class="controls">
+    <button onclick="location='switcher.html'">CHANGE QUESTION</button>
+    <button onclick="revealAll()">REVEAL ALL</button>
+    <button onclick="reset()">RESET ROUND</button>
+    <button onclick="wrong()" id="buzzer">WRONG!</button>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+let score1=0, score2=0, active=0, cur=0;
+
+function ding(){const c=new AudioContext();const o=c.createOscillator();o.frequency.value=920;o.start();setTimeout(()=>o.stop(),180);}
+function buzz(){const c=new AudioContext();const o=c.createOscillator();o.type="square";o.frequency.value=110;o.start();setTimeout(()=>o.stop(),1000);}
+
+function load(){
+  const b=document.getElementById("board"); b.innerHTML="";
+  ROUNDS[cur].a.forEach((a,i)=>{
+    const d=document.createElement("div"); d.className="card";
+    d.innerHTML=`<div class="cover"></div><div class="answer">${i+1}. ${a}</div>`;
+    d.onclick=()=>{d.classList.add("revealed");ding();}
+    b.appendChild(d);
+  });
+}
+function revealAll(){document.querySelectorAll(".card").forEach(c=>c.classList.add("revealed"));}
+function reset(){load();}
+function wrong(){buzz();}
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="1"){score1+=10; document.getElementById("s1").textContent=score1;}
+  if(e.key==="2"){score2+=10; document.getElementById("s2").textContent=score2;}
+  if(e.key===" ")wrong();
+});
+
+// load the selected question
+if(localStorage.getItem("selectedQ")!==null){
+  cur = Number(localStorage.getItem("selectedQ"));
+  localStorage.removeItem("selectedQ");
+}
+load();
+</script>
+</body>
+</html> 
