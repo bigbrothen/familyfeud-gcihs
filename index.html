@@ -3,76 +3,141 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GCIHS Family Feud</title>
+<title>GCIHS FAMILY FEUD</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
-  body,html{height:100vh;background:#000428;color:white;overflow:hidden;font-family:"Arial Black",sans-serif;}
-  .main{display:flex;flex-direction:column;height:100vh;}
-  .title{font-size:8vw;color:#ff0;text-shadow:0 0 40px gold;letter-spacing:5px;text-align:center;padding:20px 0;}
-  .board{display:grid;grid-template-columns:1fr 1fr;gap:18px;width:94vw;max-width:1150px;margin:0 auto;flex:1;align-content:start;padding:10px 0;}
-  .card{height:82px;background:#0033a0;border:8px solid #ffd700;border-radius:15px;position:relative;overflow:hidden;cursor:pointer;}
-  .cover{position:absolute;inset:0;background:#0033a0;transition:0.7s;}
-  .answer{position:absolute;inset:0;background:#ffcc00;color:#000;font-size:5vh;font-weight:bold;display:flex;align-items:center;justify-content:center;padding:0 30px;text-align:center;opacity:0;transform:scale(0.9);transition:0.7s;}
- 0.1s;}
-  .card.revealed .cover{opacity:0;transform:scale(0.9);}
-  .card.revealed .answer{opacity:1;transform:scale(1);}
-  .teams{display:flex;justify-content:space-around;padding:15px 0;}
-  .team{background:#111;padding:25px 50px;border-radius:20px;border:6px solid gold;text-align:center;}
-  .team span{font-size:6em;}
-  .team.active{box-shadow:0 0 80px gold;transform:scale(1.12);}
-  .controls{text-align:center;padding:15px;}
-  button{margin:6px;padding:16px 35px;font-size:3.5vh;background:#ffd700;color:#000;border:none;border-radius:12px;cursor:pointer;font-weight:bold;}
-  #buzzer{background:#c00;color:white;font-size:5.5vh;padding:22px 80px;}
+  body,html{height:100vh;background:#000428;color:white;overflow:hidden;font-family:"Arial Black",sans-serif;display:flex;flex-direction:column;}
+  .title{font-size:9vw;color:#ff0;text-shadow:0 0 50px gold;letter-spacing:8px;text-align:center;padding:20px 0;}
+  .top-controls{text-align:center;padding:10px;background:#000428;z-index:10;}
+  select, button{margin:5px;padding:14px 20px;font-size:4vh;background:#ffd700;color:#000;border:none;border-radius:15px;}
+  #question-select{width:80%;max-width:900px;font-size:4.5vh;}
+  .board{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:25px;width:92vw;max-width:1350px;margin:0 auto;align-content:start;padding:10px 0;}
+  .card{height:92px;background:#003399;border:10px solid #ffd700;border-radius:25px;position:relative;overflow:hidden;cursor:pointer;}
+  .front,.back{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0 40px;text-align:center;transition:0.7s;}
+  .front{background:#003399;z-index:2;}
+  .back{background:#ff0;color:#000;font-size:6vh;font-weight:bold;z-index:1;transform:rotateY(180deg);}
+  .card.flipped .front{transform:rotateY(180deg);opacity:0;}
+  .card.flipped .back{transform:rotateY(0);}
+  .teams{display:flex;justify-content:space-around;padding:20px 0;}
+  .team{background:#000;padding:30px 60px;border-radius:30px;border:9px solid #ffd700;text-align:center;box-shadow:0 0 70px gold;}
+  .team span{font-size:8.5em;}
+  .bottom-controls{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;padding:20px;background:#000428;}
+  button{font-weight:bold;}
+  #buzzer{background:#c00;color:white;padding:25px 100px;font-size:6.5vh;}
 </style>
 </head>
 <body>
 
-<div class="main">
-  <div class="title">GCIHS FAMILY FEUD</div>
-  <div class="board" id="board"></div>
-  <div class="teams">
-    <div class="team active" id="t1">TEAM 1<br><span id="s1">0</span></div>
-    <div class="team" id="t2">TEAM 2<br><span id="s2">0</span></div>
-  </div>
-  <div class="controls">
-    <button onclick="location='switcher.html'">CHANGE QUESTION</button>
-    <button onclick="revealAll()">REVEAL ALL</button>
-    <button onclick="reset()">RESET ROUND</button>
-    <button onclick="wrong()" id="buzzer">WRONG!</button>
-  </div>
+<div class="title">GCIHS FAMILY FEUD</div>
+
+<div class="top-controls">
+  <select id="question-select"></select>
+  <button onclick="prev()">◄ PREV</button>
+  <button onclick="next()">NEXT ►</button>
 </div>
 
-<script src="data.js"></script>
+<div class="board" id="board"></div>
+
+<div class="teams">
+  <div class="team active">TEAM 1<br><span id="s1">0</span></div>
+  <div class="team">TEAM 2<br><span id="s2">0</span></div>
+</div>
+
+<div class="bottom-controls">
+  <button onclick="revealAll()">REVEAL ALL</button>
+  <button onclick="reset()">RESET ROUND</button>
+  <button id="buzzer" onclick="buzzer()">WRONG!</button>
+</div>
+
 <script>
-let score1=0, score2=0, active=0, cur=0;
+// ALL 38 ROUNDS — FULL LIST
+const ROUNDS = [
+  {q:"Most famous student in the school",a:["Starboy","Don Lomo","Ella Ofori","Jesse Owusu","Nakaesha","Emma Ashley"]},
+  {q:"Craziest things that have happened this term",a:["Lashing of the Year 10 Boys","46 WASSCE students suspended","200+ students went home flu","Pastor Botchway cane moment","Numerous Sexual misconducts","Lady of the week scandal","GCIHS Memes Instagram"]},
+  {q:"Name a Pastor Botchway thing that makes students panic",a:["Go back","STOP!!!!!!","I will cane you","Sing","Foolish boy"]},
+  {q:"Name something a student definitely does not want to find in their school lunch",a:["House flies","A tooth","A strand of hair","Maggots","Stones","Uncooked food"]},
+  {q:"Name something a student might want to hide in their locker",a:["Chromebook","Provisions","Perfume","Phones","Mifi","Lip products","Money","Calculator"]},
+  {q:"Name something you hear in the dorm after lights out in the boys dorm",a:["Starboy shouting its lights out","Tumi and Kobby","Glass breaking","Countdown","Housemasters Keys","CEO dey dorm"]},
+  {q:"Name something a student might pretend isn’t theirs if it falls on the classroom floor",a:["Shankroll","Sanitary Pad","Provisions","Cutlery","A metal bottle","Rubbish","A plate"]},
+  {q:"Name something a student might try to hide from their parents if they came to visit school",a:["Their Progressives Scores","Their Teachers","Mr Eshun","Their classmates","Their discoloured teeth","House Staff"]},
+  {q:"Name a teacher students are lowkey afraid of",a:["Ms Christiana","Mr Ato","Mr Eshun","Pastor Botchway","Mr Setsofia","Mrs Cornelia","Mr Kumador","Miss Ivy","Sir Bob"]},
+  {q:"Best teacher’s nicknames",a:["Abodie","Setsos","Lolo","Don Sammy","Bykomas","JB","Osagyefo","D² 144","Poison Ivy","Bobbbb"]},
+  {q:"Name a popular snack students take in school",a:["Sausage roll","Plantain chips","Cocoa","Tangerine","Grapes","Bread"]},
+  {q:"Name something that distracts students during lessons",a:["Chromebook","Sleep","Significant other","The teachers hair","The pantry smell","Bread","Random Inspections","Mr Eshun"]},
+  {q:"Name something teachers say all the time",a:["You people have it easy oo","My work is 30% yours is 70%","When I was your age"]},
+  {q:"Name something students whisper about in class",a:["The teachers dressing","Pending DC cases","Unidentified smell"]},
+  {q:"Name a situation where students wish they could rewind time",a:["After being caught on camera for doing something wrong","Dropping their food/snack","Tripping and falling in front of a crowd"]},
+  {q:"Name something that causes chaos in the school",a:["Disagreements","Inspections","Power cuts","No water in school"]},
+  {q:"Name something you might find in a student’s tote bag",a:["Lipgloss and oil","Perfume","Pad","Shankroll","Undergarments","Money","Chromebook"]},
+  {q:"Name a reason someone would get called to the principal’s office",a:["Disrespecting a teacher","Hair","Sexual Misconduct"]},
+  {q:"Name something people say to act like they’re not offended, but they are",a:["You it is fine dont worry about it","Echill","I have not vex ooo"]},
+  {q:"Name something that instantly embarrasses a student",a:["When they are losing an argument","Disciplinary committee","Getting sacked from special diet line","Dropping plates or cutlery","Getting called to go for notebooks from stage or clothes","Dirtiest locker or bed","When pastor Botchway tells you to go back"]},
+  {q:"Best ways which students sack teachers from the classroom",a:["Sir please it’s time","When does the period end?","Sleeping","Alarm","Leaving the Classroom","Who said the period is over"]},
+  {q:"Name the most stolen thing in the dorms",a:["Sponge","Undergarments","Water","Socks","Iron","Washing powder","Bucket"]},
+  {q:"Name something people do during visiting",a:["People cooking Budak","Jumping from parents to parent","Meeting their significant others parents","Flexing family members","Flexing their phones"]},
+  {q:"Name something that disappears in school faster than anything else",a:["Water","Provisions","Peoples innocence","Money","Sausage roll","Yoghurt","Earpiece","Cocoa","Bathing Water"]},
+  {q:"Name something that can ruin someone’s morning fast",a:["Mr.Eshun coming on stage","Skirt inspection","Hausa koko","Light off","Mr Blemano´s morning announcement","No water flowing","Getting locked inside the dorm","Bad bread"]},
+  {q:"What is the craziest Christian High myth",a:["The Three breasted woman","When you mention someone's name they appear"]},
+  {q:"Name something a teacher does that instantly annoys students",a:["Jon Jokes or trying to crack a joke","I’ll report to Mr. Eshun","Surprise test/progressive","Telling us we are not learning even though we are","Blaming us for something that is not our faults","Coming to class very early","Mentioning our marks out loud","Testing us on something we have not learnt"]},
+  {q:"Name something students brag about that no one asked for",a:["How much their chromebook is","Their sneakers","Their house","They were first in class","Amount of food they have eaten","Trips they have taken","Going out of the school for events(sports)","Parents cars"]},
+  {q:"Name something people panic about when someone shouts “inspection!”",a:["The state of their lockers","The state of their Beds","The illegals in their locker","How long their skirt is","Have I written all my devotion notes","What is the Apostles creed","What was today's quiet time"]},
+  {q:"Name something that spreads fast in school besides gossip",a:["Mock results","DC cases","Dorm Issues","When Pastor Botchway is in school","The Flu","When there's yogurt at tuck shop","When there are inspections","When there is a fight going on","The pantry serving new food"]},
+  {q:"Name something C-high students pretend to like but actually hate",a:["Sunday Church Service & Devotion","Some teachers","Classmates","Hausa koko","Some Prefects","Vespers","Prefects","Quiet time"]},
+  {q:"Name something students do or say when trying to avoid chores",a:["I have a medical Report","I have been sent","I need to visit the washroom","My mother said i should not work","I don't know how to do it","Let me drop this and come back"]},
+  {q:"Name something people do to impress others",a:["Toasting the opposite gender in public","Not taking cocoa","Using perfumes","Wear snatched Teedees","Oiling their body","Walk slowly","Buying 60 cedis grapes"]},
+  {q:"If all the year groups fought, which one would win easily",a:["Year 12 & 13 Cambridge","Year 12 WASSCE","Year 11 Cambridge","Year 11 WASSCE","Year 10 Cambridge","Year 10 WASSCE"]},
+  {q:"If you wake up during surgery, what would you hate to see your surgeon holding",a:["Knife","Gun","Their phone","Sharwarma","A part of my body"]},
+  {q:"What gives you the ick",a:["Giving side-eye like they’re the CEO of Judging People.","Girls That speak pidgin","Thirst traps","A guy that feels themselves too much","Boys that wear overly baggy pants","Girls with attitudes","Someone who smells"]}
+];
 
-function ding(){const c=new AudioContext();const o=c.createOscillator();o.frequency.value=920;o.start();setTimeout(()=>o.stop(),180);}
-function buzz(){const c=new AudioContext();const o=c.createOscillator();o.type="square";o.frequency.value=110;o.start();setTimeout(()=>o.stop(),1000);}
+let cur = 0;
 
-function load(){
-  const b=document.getElementById("board"); b.innerHTML="";
-  ROUNDS[cur].a.forEach((a,i)=>{
-    const d=document.createElement("div"); d.className="card";
-    d.innerHTML=`<div class="cover"></div><div class="answer">${i+1}. ${a}</div>`;
-    d.onclick=()=>{d.classList.add("revealed");ding();}
-    b.appendChild(d);
-  });
+// Populate dropdown
+ROUNDS.forEach((r,i) => {
+  const opt = document.createElement("option");
+  opt.value = i;
+  opt.textContent = `${i+1}. ${r.q}`;
+  document.getElementById("question-select").appendChild(opt);
+});
+document.getElementById("question-select").onchange = (e) => { cur = Number(e.target.value); load(); };
+
+// Sounds
+function ding(){
+  const a = new AudioContext();
+  const o = a.createOscillator(); o.frequency.value = 1100;
+  o.connect(a.destination); o.start(); setTimeout(()=>o.stop(),200);
 }
-function revealAll(){document.querySelectorAll(".card").forEach(c=>c.classList.add("revealed"));}
-function reset(){load();}
-function wrong(){buzz();}
+function buzzer(){
+  const a = new AudioContext();
+  const o = a.createOscillator(); o.type="square"; o.frequency.value = 100;
+  o.connect(a.destination); o.start(); setTimeout(()=>o.stop(),1200);
+}
 
-document.addEventListener("keydown",e=>{
-  if(e.key==="1"){score1+=10; document.getElementById("s1").textContent=score1;}
-  if(e.key==="2"){score2+=10; document.getElementById("s2").textContent=score2;}
-  if(e.key===" ")wrong();
+// Game functions
+function load(){
+  const b = document.getElementById("board"); b.innerHTML = "";
+  ROUNDS[cur].a.forEach((ans,i)=>{
+    const card = document.createElement("div"); card.className = "card";
+    card.innerHTML = `<div class="front"></div><div class="back">${i+1}. ${ans}</div>`;
+    card.onclick = () => { card.classList.add("flipped"); ding(); };
+    b.appendChild(card);
+  });
+  document.getElementById("question-select").value = cur;
+}
+function revealAll(){ document.querySelectorAll(".card").forEach(c=>c.classList.add("flipped")); }
+function reset(){ load(); }
+function next(){ cur = (cur + 1) % ROUNDS.length; load(); }
+function prev(){ cur = (cur - 1 + ROUNDS.length) % ROUNDS.length; load(); }
+
+// Keyboard shortcuts
+document.addEventListener("keydown", e => {
+  if(e.key === "ArrowRight") next();
+  if(e.key === "ArrowLeft") prev();
+  if(e.key === "1") document.getElementById("s1").textContent = Number(document.getElementById("s1").textContent) + 10;
+  if(e.key === "2") document.getElementById("s2").textContent = Number(document.getElementById("s2").textContent) + 10;
+  if(e.key === " ") { e.preventDefault(); buzzer(); }
 });
 
-// load the selected question
-if(localStorage.getItem("selectedQ")!==null){
-  cur = Number(localStorage.getItem("selectedQ"));
-  localStorage.removeItem("selectedQ");
-}
 load();
 </script>
 </body>
