@@ -7,23 +7,24 @@
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
   body,html{height:100vh;background:#000428;color:white;font-family:"Arial Black",sans-serif;overflow:hidden;}
-  .screen{display:flex;flex-direction:column;align-items:center;justify-content:space-between;height:100vh;padding:20px 0;}
-  .title{font-size:7vw;color:#ff0;text-shadow:0 0 40px gold;letter-spacing:5px;}
-  .board{display:flex;flex-direction:column;gap:12px;width:90vw;max-width:900px;}
-  .card{height:75px;background:#003399;border:8px solid #ffd700;border-radius:15px;position:relative;overflow:hidden;cursor:pointer;}
+  .screen{display:flex;flex-direction:column;height:100vh;padding:10px 0;}
+  .title{font-size:6vw;color:#ff0;text-shadow:0 0 20px gold;letter-spacing:3px;text-align:center;margin-bottom:10px;}
+  .board{flex:1;display:flex;flex-direction:column;gap:8px;width:92vw;max-width:850px;margin:0 auto;overflow-y:auto;padding:5px 0;}
+  .card{height:58px;background:#003399;border:6px solid #ffd700;border-radius:12px;position:relative;overflow:hidden;cursor:pointer;}
   .cover{position:absolute;width:100%;height:100%;background:#003399;transition:all 0.6s;}
-  .answer{position:absolute;width:100%;height:100%;background:#ffcc00;color:black;font-size:4.5vh;font-weight:bold;display:flex;align-items:center;justify-content:center;padding:0 30px;text-align:center;opacity:0;transform:scale(0.9);transition:all 0.6s;}
+  .answer{position:absolute;width:100%;height:100%;background:#ffcc00;color:black;font-size:3.8vh;font-weight:bold;display:flex;align-items:center;justify-content:center;padding:0 20px;text-align:center;opacity:0;transform:scale(0.9);transition:all 0.6s;}
   .card.revealed .cover{opacity:0;transform:scale(0.9);}
   .card.revealed .answer{opacity:1;transform:scale(1);}
-  .strikes{font-size:18vh;letter-spacing:30px;}
+  .strikes{font-size:13vh;letter-spacing:20px;text-align:center;margin:10px 0;}
   .strikes span{opacity:0.3;transition:all 0.5s;}
-  .strikes span.on{opacity:1;color:red;text-shadow:0 0 50px red;}
-  .teams{display:flex;width:100%;justify-content:space-around;padding:20px 0;}
-  .team{background:#111;padding:30px 60px;border-radius:25px;border:6px solid gold;text-align:center;font-size:4vw;min-width:280px;}
-  .team.active{box-shadow:0 0 70px gold;transform:scale(1.1);}
-  .controls{text-align:center;padding-bottom:20px;}
-  button{margin:8px;padding:18px 40px;font-size:3.5vh;background:#ffd700;color:black;border:none;border-radius:15px;cursor:pointer;font-weight:bold;}
-  #buzzer{background:#c00;color:white;font-size:6vh;padding:25px 80px;}
+  .strikes span.on{opacity:1;color:red;text-shadow:0 0 30px red;}
+  .teams{display:flex;justify-content:space-around;padding:10px 0;}
+  .team{background:#111;padding:15px 30px;border-radius:18px;border:5px solid gold;text-align:center;min-width:200px;}
+  .team span{font-size:4.5em;}
+  .team.active{box-shadow:0 0 50px gold;transform:scale(1.08);}
+  .controls{text-align:center;padding:8px 0;}
+  button{margin:4px;padding:12px 28px;font-size:2.8vh;background:#ffd700;color:black;border:none;border-radius:10px;cursor:pointer;font-weight:bold;}
+  #buzzer{background:#c00;color:white;font-size:4.5vh;padding:18px 60px;}
 </style>
 </head>
 <body>
@@ -33,20 +34,20 @@
   <div class="board" id="board"></div>
   <div class="strikes"><span>X</span><span>X</span><span>X</span></div>
   <div class="teams">
-    <div class="team active" id="t1">TEAM 1<br><span id="score1" style="font-size:5em;">0</span></div>
-    <div class="team" id="t2">TEAM 2<br><span id="score2" style="font-size:5em;">0</span></div>
+    <div class="team active" id="t1">TEAM 1<br><span id="score1">0</span></div>
+    <div class="team" id="t2">TEAM 2<br><span id="score2">0</span></div>
   </div>
   <div class="controls">
-    <button onclick="prevRound()">◄ PREV</button>
-    <button onclick="nextRound()">NEXT ►</button>
+    <button onclick="prevRound()">PREV</button>
+    <button onclick="nextRound()">NEXT</button>
     <button onclick="revealAll()">REVEAL ALL</button>
-    <button onclick="resetRound()">RESET ROUND</button>
-    <button onclick="buzzer()" id="buzzer">WRONG! (X)</button>
+    <button onclick="resetRound()">RESET</button>
+    <button onclick="buzzer()" id="buzzer">WRONG!</button>
   </div>
 </div>
 
 <script>
-// ALL 38 ROUNDS — COMPLETE
+// ALL 38 ROUNDS — FULL LIST
 const ROUNDS = [
   {q:"Most famous student in the school",a:["Starboy","Don Lomo","Ella Ofori","Jesse Owusu","Nakaesha","Emma Ashley"]},
   {q:"Craziest things that have happened this term",a:["Lashing of the Year 10 Boys","46 WASSCE students being suspended","200+ students going home because of the flu","Pastor Botchway´s cane moment","Numerous Sexual misconducts","Lady of the week scandal","GCIHS Memes Instagram"]},
@@ -88,7 +89,6 @@ const ROUNDS = [
 
 let currentRound = 0, strikes = 0, score1 = 0, score2 = 0, activeTeam = 0;
 
-// SOUNDS
 function ding(){
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const o = ctx.createOscillator(); const g = ctx.createGain();
@@ -114,9 +114,7 @@ function loadRound(){
   });
   strikes = 0; updateStrikes();
 }
-function updateStrikes(){
-  document.querySelectorAll(".strikes span").forEach((s,i)=>s.classList.toggle("on",i<strikes));
-}
+function updateStrikes(){document.querySelectorAll(".strikes span").forEach((s,i)=>s.classList.toggle("on",i<strikes));}
 function updateScores(){
   document.getElementById("score1").textContent = score1;
   document.getElementById("score2").textContent = score2;
@@ -129,14 +127,10 @@ function revealAll(){ document.querySelectorAll(".card").forEach(c=>c.classList.
 function resetRound(){ loadRound(); }
 function buzzer(){
   strikes++; buzzer();
-  if(strikes===3){
-    alert("3 STRIKES! Other team steals!");
-    activeTeam = 1-activeTeam; strikes=0;
-  }
+  if(strikes===3){ alert("3 STRIKES! Other team steals!"); activeTeam = 1-activeTeam; strikes=0; }
   updateStrikes();
 }
 
-// Keyboard shortcuts
 document.addEventListener("keydown", e => {
   if(e.key==="ArrowRight" || e.key==="n") nextRound();
   if(e.key==="ArrowLeft" || e.key==="p") prevRound();
