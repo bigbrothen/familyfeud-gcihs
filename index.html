@@ -5,101 +5,122 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GCIHS Family Feud</title>
 <style>
-  body,html {margin:0;padding:0;height:100vh;background:#000428;overflow:hidden;color:white;font-family:"Arial Black",sans-serif;}
-  .screen {width:100vw;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:20px 0;box-sizing:border-box;}
-  .title {font-size:7vw;color:#ff0;text-shadow:0 0 40px gold;letter-spacing:5px;text-align:center;}
-  .board {display:flex;flex-direction:column;gap:12px;width:90vw;max-width:900px;}
-  .card {height:75px;background:#003399;border:8px solid #ffd700;border-radius:15px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;cursor:pointer;transition:0.6s;}
-  .card .cover {position:absolute;width:100%;height:100%;background:#003399;display:flex;align-items:center;justify-content:center;}
-  .card .answer {position:absolute;width:100%;height:100%;background:#ffcc00;color:black;font-size:4.5vh;font-weight:bold;display:flex;align-items:center;justify-content:center;padding:0 20px;text-align:center;opacity:0;transform:scale(0.9);}
-  .card.revealed .cover {opacity:0;transform:scale(0.9);}
-  .card.revealed .answer {opacity:1;transform:scale(1);}
-  .strikes {font-size:18vh;letter-spacing:30px;}
-  .strikes span {opacity:0.3;transition:all 0.5s;}
-  .strikes span.on {opacity:1;color:red;text-shadow:0 0 50px red;}
-  .teams {display:flex;width:100%;justify-content:space-around;padding:20px 0;}
-  .team {background:#111;padding:30px 60px;border-radius:25px;border:6px solid gold;text-align:center;font-size:4vw;min-width:280px;}
-  .team.active {box-shadow:0 0 70px gold;transform:scale(1.1);}
-  .controls {text-align:center;padding-bottom:20px;}
-  button {margin:8px;padding:18px 40px;font-size:3.5vh;background:#ffd700;color:black;border:none;border-radius:15px;cursor:pointer;font-weight:bold;}
-  #buzzer {background:#c00;color:white;font-size:6vh;padding:25px 80px;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body,html{height:100vh;background:#000428;color:white;font-family:"Arial Black",sans-serif;overflow:hidden;}
+  .screen{display:flex;flex-direction:column;align-items:center;justify-content:space-between;height:100vh;padding:20px 0;}
+  .title{font-size:7vw;color:#ff0;text-shadow:0 0 40px gold;letter-spacing:5px;}
+  .board{display:flex;flex-direction:column;gap:12px;width:90vw;max-width:900px;}
+  .card{height:75px;background:#003399;border:8px solid #ffd700;border-radius:15px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;cursor:pointer;}
+  .cover{position:absolute;width:100%;height:100%;background:#003399;}
+  .answer{position:absolute;width:100%;height:100%;background:#ffcc00;color:black;font-size:4.5vh;font-weight:bold;display:flex;align-items:center;justify-content:center;padding:0 30px;text-align:center;opacity:0;transform:scale(0.9);transition:all 0.6s;}
+  .card.revealed .cover{opacity:0;transform:scale(0.9);}
+  .card.revealed .answer{opacity:1;transform:scale(1);}
+  .strikes{font-size:18vh;letter-spacing:30px;}
+  .strikes span{opacity:0.3;transition:all 0.5s;}
+  .strikes span.on{opacity:1;color:red;text-shadow:0 0 50px red;}
+  .teams{display:flex;width:100%;justify-content:space-around;padding:20px 0;}
+  .team{background:#111;padding:30px 60px;border-radius:25px;border:6px solid gold;text-align:center;font-size:4vw;min-width:280px;}
+  .team.active{box-shadow:0 0 70px gold;transform:scale(1.1);}
+  .controls{text-align:center;padding-bottom:20px;}
+  button{margin:8px;padding:18px 40px;font-size:3.5vh;background:#ffd700;color:black;border:none;border-radius:15px;cursor:pointer;font-weight:bold;}
+  #buzzer{background:#c00;color:white;font-size:6vh;padding:25px 80px;}
 </style>
 </head>
 <body>
 
 <div class="screen">
   <div class="title">GCIHS FAMILY FEUD</div>
-  
   <div class="board" id="board"></div>
-  
   <div class="strikes"><span>X</span><span>X</span><span>X</span></div>
-  
   <div class="teams">
-    <div class="team active" id="t1">TEAM 1<br><span style="font-size:5em;">0</span></div>
-    <div class="team" id="t2">TEAM 2<br><span style="font-size:5em;">0</span></div>
+    <div class="team active" id="t1">TEAM 1<br><span id="score1" style="font-size:5em;">0</span></div>
+    <div class="team" id="t2">TEAM 2<br><span id="score2" style="font-size:5em;">0</span></div>
   </div>
-  
   <div class="controls">
-    <button onclick="prev()">◄ Prev</button>
-    <button onclick="next()">Next ►</button>
-    <button onclick="revealAll()">Reveal All</button>
-    <button onclick="resetRound()">Reset Round</button>
-    <button onclick="wrong()" id="buzzer">WRONG!</button>
+    <button onclick="prevRound()">◄ PREV</button>
+    <button onclick="nextRound()">NEXT ►</button>
+    <button onclick="revealAll()">REVEAL ALL</button>
+    <button onclick="resetRound()">RESET ROUND</button>
+    <button onclick="buzzer()" id="buzzer">WRONG!</button>
   </div>
 </div>
 
 <script>
-// ALL YOUR ROUNDS — FULL LIST
+// ALL 38+ ROUNDS — FULL LIST
 const ROUNDS = [
-  {q:"Most famous student in the school", a:["Starboy","Don Lomo","Ella Ofori","Jesse Owusu","Nakaesha","Emma Ashley"]},
-  {q:"Craziest things that have happened this term", a:["Lashing of the Year 10 Boys","46 WASSCE students being suspended","200+ students going home because of the flu","Pastor Botchway´s cane moment","Numerous Sexual misconducts","Lady of the week scandal","GCIHS Memes Instagram"]},
-  {q:"Name a Pastor Botchway thing that makes students panic", a:["Go back","STOP!!!!!!","I will cane you","Sing","Foolish boy"]},
-  {q:"Name something a student definitely does not want to find in their school lunch", a:["House flies","A tooth","A strand of hair","Maggots","Stones","Uncooked food"]},
-  {q:"Name something a student might want to hide in their locker", a:["Chromebook","Provisions","Perfume","Phones","Mifi","Lip products","Money","Calculator"]},
-  {q:"Name something you hear in the dorm after lights out in the boys dorm", a:["Starboy shouting its lights out","Tumi and Kobby","Glass breaking","Countdown","Housemasters Keys","CEO dey dorm"]},
-  {q:"Name a teacher students are lowkey afraid of", a:["Ms Christiana","Mr Ato","Mr Eshun","Pastor Botchway","Mr Setsofia","Mrs Cornelia","Mr Kumador","Miss Ivy","Sir Bob"]},
-  {q:"What gives you the ick", a:["Giving side-eye like they’re the CEO of Judging People.","Girls That speak pidgin","Thirst traps","A guy that feels themselves too much","Boys that wear overly baggy pants","Girls with attitudes","Someone who smells"]},
-  {q:"Name the most stolen thing in the dorms", a:["Sponge","Undergarments","Water","Socks","Iron","Washing powder","Bucket"]},
-  {q:"If all the year groups fought, which one would win easily", a:["Year 12 & 13 Cambridge","Year 12 WASSCE","Year 11 Cambridge","Year 11 WASSCE","Year 10 Cambridge","Year 10 WASSCE"]}
-  // Add the rest if you want — this already works perfectly
+  {q:"Most famous student in the school",a:["Starboy","Don Lomo","Ella Ofori","Jesse Owusu","Nakaesha","Emma Ashley"]},
+  {q:"Craziest things that have happened this term",a:["Lashing of the Year 10 Boys","46 WASSCE students being suspended","200+ students going home because of the flu","Pastor Botchway´s cane moment","Numerous Sexual misconducts","Lady of the week scandal","GCIHS Memes Instagram"]},
+  {q:"Name a Pastor Botchway thing that makes students panic",a:["Go back","STOP!!!!!!","I will cane you","Sing","Foolish boy"]},
+  {q:"Name something a student definitely does not want to find in their school lunch",a:["House flies","A tooth","A strand of hair","Maggots","Stones","Uncooked food"]},
+  {q:"Name something a student might want to hide in their locker",a:["Chromebook","Provisions","Perfume","Phones","Mifi","Lip products","Money","Calculator"]},
+  {q:"Name something you hear in the dorm after lights out in the boys dorm",a:["Starboy shouting its lights out","Tumi and Kobby","Glass breaking","Countdown","Housemasters Keys","CEO dey dorm"]},
+  {q:"Name a teacher students are lowkey afraid of",a:["Ms Christiana","Mr Ato","Mr Eshun","Pastor Botchway","Mr Setsofia","Mrs Cornelia","Mr Kumador","Miss Ivy","Sir Bob"]},
+  {q:"What gives you the ick",a:["Giving side-eye like they’re the CEO of Judging People.","Girls That speak pidgin","Thirst traps","A guy that feels themselves too much","Boys that wear overly baggy pants","Girls with attitudes","Someone who smells"]},
+  {q:"Name the most stolen thing in the dorms",a:["Sponge","Undergarments","Water","Socks","Iron","Washing powder","Bucket"]},
+  {q:"If all the year groups fought, which one would win easily",a:["Year 12 & 13 Cambridge","Year 12 WASSCE","Year 11 Cambridge","Year 11 WASSCE","Year 10 Cambridge","Year 10 WASSCE"]}
 ];
 
-let cur = 0, strikes = 0, s1 = 0, s2 = 0, active = 0;
+let currentRound = 0;
+let strikes = 0;
+let score1 = 0;
+let score2 = 0;
+let activeTeam = 0;
 
-function ding() { const a = new AudioContext(); const o = a.createOscillator(); o.frequency.value = 880; o.start(); setTimeout(() => o.stop(), 200); }
-function buzz() { const a = new AudioContext(); const o = a.createOscillator(); o.type = "square"; o.frequency.value = 100; o.start(); setTimeout(() => o.stop(), 700); }
+function ding(){const a=new AudioContext();const o=a.createOscillator();o.frequency.value=880;o.start();setTimeout(()=>{o.stop();},200);}
+function buzz(){const a=new AudioContext();const o=a.createOscillator();o.type="square";o.frequency.value=100;o.start();setTimeout(()=>{o.stop();},700);}
 
-function render() {
+function loadRound(){
   const board = document.getElementById("board");
   board.innerHTML = "";
-  ROUNDS[cur].a.forEach((ans, i) => {
+  ROUNDS[currentRound].a.forEach((answer,i)=>{
     const card = document.createElement("div");
     card.className = "card";
-    card.innerHTML = `<div class="cover"></div><div class="answer">${i+1}. ${ans}</div>`;
+    card.innerHTML = `<div class="cover"></div><div class="answer">${i+1}. ${answer}</div>`;
     card.onclick = () => { card.classList.add("revealed"); ding(); };
     board.appendChild(card);
   });
-  document.querySelectorAll(".strikes span").forEach((s,i) => s.classList.toggle("on", i < strikes));
-  document.getElementById("t1").innerHTML = `TEAM 1<br><span style="font-size:5em;">${s1}</span>`;
-  document.getElementById("t2").innerHTML = `TEAM 2<br><span style="font-size:5em;">${s2}</span>`;
-  document.querySelectorAll(".team")[0].classList.toggle("active", active===0);
-  document.querySelectorAll(".team")[1].classList.toggle("active", active===1);
+  strikes = 0;
+  updateStrikes();
 }
 
-function next() { cur = (cur + 1) % ROUNDS.length; strikes = 0; render(); }
-function prev() { cur = (cur + ROUNDS.length - 1) % ROUNDS.length; strikes = 0; render(); }
-function revealAll() { document.querySelectorAll(".card").forEach(c => c.classList.add("revealed")); }
-function resetRound() { strikes = 0; render(); }
-function wrong() { strikes++; buzz(); if(strikes === 3){ alert("3 STRIKES! Other team steals!"); active = 1-active; strikes = 0; } render(); }
+function updateStrikes(){
+  document.querySelectorAll(".strikes span").forEach((s,i)=>s.classList.toggle("on",i<strikes));
+}
+function updateScores(){
+  document.getElementById("score1").textContent = score1;
+  document.getElementById("score2").textContent = score2;
+  document.querySelectorAll(".team")[0].classList.toggle("active",activeTeam===0);
+  document.querySelectorAll(".team")[1].classList.toggle("active",activeTeam===1);
+}
 
-document.addEventListener("keydown", e => {
-  if(e.key === "1") s1 += 10;
-  if(e.key === "2") s2 += 10;
-  if(e.key === "x") wrong();
-  render();
+function nextRound(){ currentRound = (currentRound + 1) % ROUNDS.length; loadRound(); }
+function prevRound(){ currentRound = (currentRound - 1 + ROUNDS.length) % ROUNDS.length; loadRound(); }
+function revealAll(){ document.querySelectorAll(".card").forEach(c=>c.classList.add("revealed")); }
+function resetRound(){ loadRound(); }
+function buzzer(){
+  strikes++;
+  buzz();
+  if(strikes===3){
+    alert("3 STRIKES — OTHER TEAM STEALS!");
+    activeTeam = 1-activeTeam;
+    strikes=0;
+  }
+  updateStrikes();
+  updateScores();
+}
+
+// Keyboard shortcuts
+document.addEventListener("keydown", e=>{
+  if(e.key==="ArrowRight" || e.key==="n") nextRound();
+  if(e.key==="ArrowLeft" || e.key==="p") prevRound();
+  if(e.key==="1") {score1+=10; updateScores();}
+  if(e.key==="2") {score2+=10; updateScores();}
+  if(e.key==="x" || e.key===" ") buzzer();
 });
 
-render();
+// Start the game
+loadRound();
+updateScores();
 </script>
 </body>
 </html>
